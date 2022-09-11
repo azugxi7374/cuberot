@@ -37,12 +37,19 @@
             const scene = new THREE.Scene();
 
             // カメラを作成
+            var cameraIsPerspective = true;
             const S = 2;
             var theta = 45;
-            // var d = S / Math.tan(theta);
             const camera = new THREE.PerspectiveCamera(theta, width / height);
             camera.position.set(0, 0, 5);
             // camera.fov = 15;
+            const oCamera = new THREE.OrthographicCamera(-S * width / height, S * width / height, (S), (-S));
+            // const oCamera = new THREE.OrthographicCamera(-S / 2, S / 2, (-S / 2) * height / width, (S / 2) * height / width);
+            // width / - 2, width / 2, height / 2, height / - 2);
+            oCamera.position.set(0, 0, 5);
+            camera.lookAt(new THREE.Vector3(0, 0, 0));
+            oCamera.lookAt(new THREE.Vector3(0, 0, 0));
+
 
             // container
             const container = new THREE.Object3D();
@@ -102,39 +109,54 @@
                 console.log({ xrot, yrot, theta, d });
                 container.rotation.x = xrot * Math.PI / 180;
                 container.rotation.y = yrot * Math.PI / 180;
-                camera.fov = theta;
-                camera.updateProjectionMatrix();
-                camera.position.set(0, 0, d);
-                renderer.render(scene, camera); // レンダリング
-                calcPos();
+                if (cameraIsPerspective) {
+                    camera.fov = theta;
+                    camera.updateProjectionMatrix();
+                    camera.position.set(0, 0, d);
+                    renderer.render(scene, camera);
+                } else {
+                    renderer.render(scene, oCamera);
+                }
+                // calcPos();
             }
 
+            function setTheta(value) {
+                if (value != 0) {
+                    theta = value;
+                    cameraIsPerspective = true;
+                } else {
+                    theta = 0;
+                    cameraIsPerspective = false;
+                }
+                console.log(value, cameraIsPerspective);
+            }
             function setValue() {
                 input_range_x.value = xrot;
                 input_text_x.value = xrot;
                 input_range_y.value = yrot;
                 input_text_y.value = yrot;
                 input_range_theta.value = theta;
-                input_text_theta.value = theta;
+                input_text_theta.value = cameraIsPerspective ? theta : '平行投影';
             }
-
-            function calcPos() {
-                const worldPosition = box.getWorldPosition(new THREE.Vector3());
-                const projection = worldPosition.project(camera);
-                const sx = (width / 2) * (+projection.x + 1.0);
-                const sy = (height / 2) * (-projection.y + 1.0);
-
-                // スクリーン座標
-                // console.log({ sx, sy }, worldPosition.x);
-            }
+            /*
+                        function calcPos() {
+                            const worldPosition = box.getWorldPosition(new THREE.Vector3());
+                            const projection = worldPosition.project(camera);
+                            const sx = (width / 2) * (+projection.x + 1.0);
+                            const sy = (height / 2) * (-projection.y + 1.0);
+                        }
+            */
 
             input_range_x.addEventListener('input', (e) => { xrot = e.target.value; setValue(); render(); });
             input_text_x.addEventListener('change', (e) => { xrot = e.target.value; setValue(); render(); });
             input_range_y.addEventListener('input', (e) => { yrot = e.target.value; setValue(); render(); });
             input_text_y.addEventListener('change', (e) => { yrot = e.target.value; setValue(); render(); });
-            input_range_theta.addEventListener('input', (e) => { theta = e.target.value; setValue(); render(); });
-            input_text_theta.addEventListener('change', (e) => { theta = e.target.value; setValue(); render(); });
-
+            input_range_theta.addEventListener('input', (e) => { setTheta(e.target.value); setValue(); render(); });
+            input_text_theta.addEventListener('change', (e) => { setTheta(e.target.value); setValue(); render(); });
+            /*
+            input_button_camera.addEventListener('click', (e) => {
+                cameraIsPerspective = !cameraIsPerspective; setValue(); render();
+            });*/
             setValue();
             render();
         }
@@ -155,9 +177,12 @@
             <input type="text" id="input_text_y" size="4">
         </div>
         <div>
-            <input type="range" id="input_range_theta" min="5" max="120" step="5">
+            <input type="range" id="input_range_theta" min="0" max="120" step="5">
             <label for="input_y">視野角</label>
-            <input type="text" id="input_text_theta" size="4">
+            <input type="text" id="input_text_theta" size="10">
+            <!--
+            <input type="button" id="input_button_camera" value="透視投影">
+            -->
         </div>
     </div>
 </body>
