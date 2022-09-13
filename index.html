@@ -3,7 +3,11 @@
 
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <style>
+        .controls>div {
+            padding: 10px 0;
+        }
     </style>
     <script src="https://unpkg.com/three@0.140.2/build/three.min.js"></script>
     <script>
@@ -18,8 +22,8 @@
                 ].map(id => document.getElementById(id))
 
             // サイズを指定
-            const width = 400;
-            const height = 540;
+            const width = window.innerWidth - 10; // 400;
+            const height = window.innerHeight / 2;
 
             [input_range_x, input_range_y, input_range_theta].map(e => {
                 e.style.width = `${width - 150}px`
@@ -165,7 +169,7 @@
 
 <body>
     <canvas id="myCanvas"></canvas>
-    <div>
+    <div class="controls">
         <div>
             <input type="range" id="input_range_x" min="-180" max="180" step="15">
             <label for="input_x">X</label>
@@ -179,7 +183,7 @@
         <div>
             <input type="range" id="input_range_theta" min="0" max="120" step="5">
             <label for="input_y">視野角</label>
-            <input type="text" id="input_text_theta" size="10">
+            <input type="text" id="input_text_theta" size="8">
             <!--
             <input type="button" id="input_button_camera" value="透視投影">
             -->
