@@ -4,167 +4,11 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <style>
-        .controls>div {
-            padding: 10px 0;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/three@0.140.2/build/three.min.js"></script>
-    <script>
-        // ページの読み込みを待つ
-        window.addEventListener('DOMContentLoaded', init);
-
-        function init() {
-            const [input_range_x, input_text_x, input_range_y, input_text_y,
-                input_range_theta, input_text_theta] = [
-                    'input_range_x', 'input_text_x', 'input_range_y', 'input_text_y',
-                    'input_range_theta', 'input_text_theta'
-                ].map(id => document.getElementById(id))
-
-            // サイズを指定
-            const width = window.innerWidth - 10; // 400;
-            const height = window.innerHeight / 2;
-
-            [input_range_x, input_range_y, input_range_theta].map(e => {
-                e.style.width = `${width - 150}px`
-            });
-
-
-            // レンダラーを作成
-            const renderer = new THREE.WebGLRenderer({
-                canvas: document.querySelector('#myCanvas')
-            });
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(width, height);
-
-            // シーンを作成
-            const scene = new THREE.Scene();
-
-            // カメラを作成
-            var cameraIsPerspective = true;
-            const S = 2;
-            var theta = 45;
-            const camera = new THREE.PerspectiveCamera(theta, width / height);
-            camera.position.set(0, 0, 5);
-            // camera.fov = 15;
-            const oCamera = new THREE.OrthographicCamera(-S * width / height, S * width / height, (S), (-S));
-            // const oCamera = new THREE.OrthographicCamera(-S / 2, S / 2, (-S / 2) * height / width, (S / 2) * height / width);
-            // width / - 2, width / 2, height / 2, height / - 2);
-            oCamera.position.set(0, 0, 5);
-            camera.lookAt(new THREE.Vector3(0, 0, 0));
-            oCamera.lookAt(new THREE.Vector3(0, 0, 0));
-
-
-            // container
-            const container = new THREE.Object3D();
-            scene.add(container);
-            const geometry = new THREE.BoxGeometry(1, 1, 1);
-            const material = new THREE.MeshNormalMaterial();
-            const box = new THREE.Mesh(geometry, material);
-            container.add(box);
-
-            const linemat = new THREE.LineBasicMaterial({ color: 0x444444 });
-            for (const [p1, p2] of makeCubeLines()) {
-                console.log(p1, p2);
-                const points = [];
-                points.push(new THREE.Vector3(...p1));
-                points.push(new THREE.Vector3(...p2));
-                const geometry = new THREE.BufferGeometry().setFromPoints(points);
-                const line = new THREE.Line(geometry, linemat);
-                container.add(line);
-            }
-
-            // [[0, 0, -L], [0, 0, L]]
-            function makeCubeLines() {
-                const l = 0.5;
-                const L = 10000;
-                const points = [];
-                function bit2point(b) {
-                    return (b + 8).toString(2).slice(1).split("").map(s => parseInt(s));
-                }
-                // 000 ~ 111
-                for (let i = 0; i < 8; i++) {
-                    for (let k = 0; k < 3; k++) {
-                        const i2 = i ^ (1 << k);
-                        if (i < i2) {
-                            let b1 = bit2point(i);
-                            let b2 = bit2point(i2);
-                            b1 = b1.map(v => v - l);
-                            b2 = b2.map(v => v - l);
-                            b1[2 - k] -= L;
-                            b2[2 - k] += L;
-                            points.push([b1, b2]);
-                        }
-                    }
-                }
-                return points;
-            }
-
-            // const box2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1), new THREE.MeshNormalMaterial());
-            // container.add(box2);
-            // box2.position.set(0.5, 0.5, 0.5);
-
-
-            var xrot = 30;
-            var yrot = 30;
-
-            function render() {
-                const d = S / Math.tan(theta * Math.PI / 360);
-                console.log({ xrot, yrot, theta, d });
-                container.rotation.x = xrot * Math.PI / 180;
-                container.rotation.y = yrot * Math.PI / 180;
-                if (cameraIsPerspective) {
-                    camera.fov = theta;
-                    camera.updateProjectionMatrix();
-                    camera.position.set(0, 0, d);
-                    renderer.render(scene, camera);
-                } else {
-                    renderer.render(scene, oCamera);
-                }
-                // calcPos();
-            }
-
-            function setTheta(value) {
-                if (value != 0) {
-                    theta = value;
-                    cameraIsPerspective = true;
-                } else {
-                    theta = 0;
-                    cameraIsPerspective = false;
-                }
-                console.log(value, cameraIsPerspective);
-            }
-            function setValue() {
-                input_range_x.value = xrot;
-                input_text_x.value = xrot;
-                input_range_y.value = yrot;
-                input_text_y.value = yrot;
-                input_range_theta.value = theta;
-                input_text_theta.value = cameraIsPerspective ? theta : '平行投影';
-            }
-            /*
-                        function calcPos() {
-                            const worldPosition = box.getWorldPosition(new THREE.Vector3());
-                            const projection = worldPosition.project(camera);
-                            const sx = (width / 2) * (+projection.x + 1.0);
-                            const sy = (height / 2) * (-projection.y + 1.0);
-                        }
-            */
-
-            input_range_x.addEventListener('input', (e) => { xrot = e.target.value; setValue(); render(); });
-            input_text_x.addEventListener('change', (e) => { xrot = e.target.value; setValue(); render(); });
-            input_range_y.addEventListener('input', (e) => { yrot = e.target.value; setValue(); render(); });
-            input_text_y.addEventListener('change', (e) => { yrot = e.target.value; setValue(); render(); });
-            input_range_theta.addEventListener('input', (e) => { setTheta(e.target.value); setValue(); render(); });
-            input_text_theta.addEventListener('change', (e) => { setTheta(e.target.value); setValue(); render(); });
-            /*
-            input_button_camera.addEventListener('click', (e) => {
-                cameraIsPerspective = !cameraIsPerspective; setValue(); render();
-            });*/
-            setValue();
-            render();
-        }
-    </script>
+    <script src="THREE.MeshLine.js"></script>
+    <script src="geo.js"></script>
+    <script src="index.js"></script>
 </head>
 
 <body>
@@ -179,6 +23,11 @@
             <input type="range" id="input_range_y" min="-180" max="180" step="15">
             <label for="input_y">Y</label>
             <input type="text" id="input_text_y" size="4">
+        </div>
+        <div>
+            <input type="range" id="input_range_z" min="-180" max="180" step="15">
+            <label for="input_y">Z</label>
+            <input type="text" id="input_text_z" size="4">
         </div>
         <div>
             <input type="range" id="input_range_theta" min="0" max="120" step="5">
