@@ -1,9 +1,18 @@
 window.addEventListener('DOMContentLoaded', init);
 
+const OBJ = {
+    cube: createCube,
+    cylinder: createCylinder,
+    cube_matrix: abstCreateMatrix(createCube),
+    cylinder_matrix: abstCreateMatrix(createCylinder),
+}
+
 function init() {
-    const [input_range_x, input_text_x, input_range_y, input_text_y,
+    const [select_obj,
+        input_range_x, input_text_x, input_range_y, input_text_y,
         input_range_z, input_text_z,
         input_range_theta, input_text_theta] = [
+            'select_obj',
             'input_range_x', 'input_text_x', 'input_range_y', 'input_text_y',
             'input_range_z', 'input_text_z',
             'input_range_theta', 'input_text_theta'
@@ -29,6 +38,7 @@ function init() {
     var xrot = 0;
     var yrot = 0;
     var zrot = 0;
+    var createObj = OBJ.cube;
 
     // camera
     const S = 2;
@@ -48,24 +58,34 @@ function init() {
     const floorContainer = createFloor(101);
     scene.add(floorContainer);
 
-    // container
-    const container = createCube();
+    // obj
+    const container = new THREE.Group();
     scene.add(container);
 
+    // const axesHelper = new THREE.AxesHelper(5);
+    // scene.add(axesHelper);
+
     function render() {
-        const d = S / Math.tan(theta * Math.PI / 360);
-        console.log({ xrot, yrot, zrot, theta, d });
+        // obj
+        container.clear();
+        container.add(createObj());
+
+        // rot
         container.rotation.x = xrot * Math.PI / 180;
         container.rotation.y = yrot * Math.PI / 180;
         container.rotation.z = zrot * Math.PI / 180;
+        // camera
+        const d = S / Math.tan(theta * Math.PI / 360);
         if (cameraIsPerspective) {
             camera.fov = theta;
             camera.updateProjectionMatrix();
             camera.position.set(0, 0, d);
+            // camera.setViewOffset(width, height, 0, 0, width / 2, height / 2);
             renderer.render(scene, camera);
         } else {
             renderer.render(scene, oCamera);
         }
+        console.log({ xrot, yrot, zrot, theta, d });
         // calcPos();
     }
 
@@ -80,6 +100,7 @@ function init() {
         console.log(value, cameraIsPerspective);
     }
     function setValue() {
+        // select_obj...
         input_range_x.value = xrot;
         input_text_x.value = xrot;
         input_range_y.value = yrot;
@@ -98,6 +119,7 @@ function init() {
                 }
     */
 
+    select_obj.addEventListener('input', (e) => { createObj = OBJ[e.target.value]; setValue(); render(); });
     input_range_x.addEventListener('input', (e) => { xrot = e.target.value; setValue(); render(); });
     input_text_x.addEventListener('change', (e) => { xrot = e.target.value; setValue(); render(); });
     input_range_y.addEventListener('input', (e) => { yrot = e.target.value; setValue(); render(); });

@@ -1,19 +1,21 @@
-function createCubeMatrix({ nx = 5, ny = 5, nz = 5, dist = 5 }) {
-    const container = new THREE.Object3D();
+function abstCreateMatrix(createObj) {
+    function createMatrix({ nx = 3, ny = 3, nz = 3, dist = 2 } = {}) {
+        const container = new THREE.Object3D();
 
-    for (let x = -nx + 1; x < nx; x++) {
-        for (let y = -ny + 1; y < ny; y++) {
-            for (let z = 0; z < nz; z++) {
-                const cube = createCube();
-                cube.position.x = x * dist
-                cube.position.y = y * dist
-                cube.position.z = -z * dist
-                container.add(cube);
+        for (let x = -nx + 1; x < nx; x++) {
+            for (let y = -ny + 1; y < ny; y++) {
+                for (let z = 0; z < nz; z++) {
+                    const obj = createObj();
+                    obj.position.x = x * dist
+                    obj.position.y = y * dist
+                    obj.position.z = -z * dist
+                    container.add(obj);
+                }
             }
         }
+        return container;
     }
-
-    return container;
+    return createMatrix
 }
 
 // cube
@@ -65,6 +67,48 @@ function createCube() {
     cube.add(lines);
 
     return cube;
+}
+
+
+// cylinder
+function createCylinder() {
+    const container = new THREE.Group();
+
+    const clylinder = (function () {
+        const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7, side: THREE.DoubleSide });
+        const geo = new THREE.CylinderGeometry(0.5, 0.5, 1, 32, undefined, true);
+        return new THREE.Mesh(geo, mat);
+    })();
+    container.add(clylinder);
+
+    const circles = (function () {
+        const colors = [0x00ff00, 0xff00ff];
+        const geo = new THREE.CircleGeometry(0.5, 32);
+
+        return [0, 1].map(i => {
+            const c = new THREE.Mesh(geo,
+                new THREE.MeshBasicMaterial({ color: colors[i], transparent: true, opacity: 0.7, side: THREE.DoubleSide }));
+            c.position.y = [0.5, -0.5][i];
+            c.rotation.x = Math.PI / 2;
+            return c;
+        });
+    })();
+    for (const c of circles) { container.add(c) };
+
+    // line
+    const toruses = (function () {
+        const geo = new THREE.TorusGeometry(0.5, 0.005, 8, 32);
+        const mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const t1 = new THREE.Mesh(geo, mat);
+        t1.rotation.x = Math.PI / 2;
+        t1.position.y = 0.5;
+        const t2 = new THREE.Mesh(geo, mat);
+        t2.rotation.x = Math.PI / 2;
+        t2.position.y = -0.5;
+        return [t1, t2]
+    })();
+    for (const t of toruses) { container.add(t) }
+    return container;
 }
 
 function createFloor(gSize) {
